@@ -1,21 +1,23 @@
 #include <iostream>
 #include <getopt.h>
+#include <vector>
+#include <string>
 
 int main(int argc, char *argv[]) {
     int c;
     bool rec = false;   //recursive
-    bool cs = false;    //case sensitive
+    bool cis = false;    //case INsensitive
 
-    while((c=getopt(argc,argv, "-R -i")) != -1) {
+    while((c=getopt(argc,argv, "Ri")) != -1) {
         switch(c) {
             case 'R':
                 rec = true;
                 break;
             case 'i':
-                cs = true;
+                cis = true;
                 break;
             case '?':
-                fprintf(stderr, "Usage: %s [-R] [-i] searchpath filename1 [filename2]...[filenameN]\n", argv[0]);
+                std::cerr<<"Usage: "<<argv[0]<< " [-R] [-i] searchpath filename1 [filename2]...[filenameN]\n";
                 return 1;
             default:
                 abort();
@@ -23,21 +25,24 @@ int main(int argc, char *argv[]) {
     }
 
     if(argc-optind < 2) {   //because we need at least searchpath and one filename
-        fprintf(stderr, "Usage: %s [-R] [-i] searchpath filename1 [filename2]...[filenameN]\n", argv[0]);
+        std::cerr<<"Usage: "<<argv[0]<< " [-R] [-i] searchpath filename1 [filename2]...[filenameN]\n";
         return 1;
     }
 
-    char *searchpath = argv[optind];
-    char** filenames = &argv[optind+1];
-    int filecount = argc - optind - 1;
-
-    printf("Search Path: %s\n", searchpath);
-    printf("Filenames:\n");
-    for(int i = 0; i < filecount; i++) {
-        printf("  %s\n", filenames[i]);
+    std::string searchpath = argv[optind];
+    std::vector<std::string> filenames;
+    for (int i = optind + 1; i < argc; i++){
+        filenames.push_back(argv[i]);
     }
 
-    printf("Options: recursie=%d, case_sensitive=%d\n", rec, cs);
+    int filecount = argc - optind - 1;
+
+    std::cout<<"Search Path: "<<searchpath<<"\n";
+    std::cout<<"Filenames:\n";
+    for (const auto &f : filenames){
+        std::cout<<"  "<<f<<"\n";
+    }
+    std::cout<<"Options: recursive="<<rec<<", insensitive="<<cis<<"\n";
 
     return 0;
 }
