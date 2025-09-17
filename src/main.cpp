@@ -41,10 +41,10 @@ int main(int argc, char *argv[]) {
   while ((opt = getopt(argc, argv, "Ri")) != -1) {
     switch (opt) {
     case 'R':
-      opts->rec = true;
+      opts->setRecursive(true);
       break;
     case 'i':
-      opts->cis = true;
+      opts->setCaseInsensitive(true);
       break;
     case '?':
       std::cerr
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  opts->startDir = argv[optind];
+  opts->setStartDirectory(argv[optind]);
   std::vector<std::string> filenames;
   for (int i = optind + 1; i < argc; i++) {
     filenames.push_back(argv[i]);
@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
 
   std::vector<pid_t> children;
   for (auto &f : filenames) {
-    pid_t pid = fork();
+    pid_t pid = 0;
     if (pid == 0) { // child process
       Finder finder(opts, f);
       finder.search();

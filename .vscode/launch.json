@@ -1,27 +1,50 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-      {
-        "name": "Debug application",
-        "type": "cppdbg",
-        "request": "launch",
-        "program": "${workspaceFolder}/build/build/application", // Output executable
-        "args": [],
-        "stopAtEntry": false,
-        "cwd": "${workspaceFolder}",
-        "environment": [],
-        "externalConsole": false,
-        "MIMode": "gdb",
-        "miDebuggerPath": "/usr/bin/gdb", // Path to gdb (adjust if necessary)
-        "setupCommands": [
-          {
-            "description": "Enable pretty-printing for gdb",
-            "text": "-enable-pretty-printing",
-            "ignoreFailures": true
-          }
-        ],
-        "internalConsoleOptions": "openOnSessionStart"
-      }
-
-    ]
-  }
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug application",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/myfind", // Output executable
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "miDebuggerPath": "/usr/bin/gdb", // Path to gdb (adjust if necessary)
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "internalConsoleOptions": "openOnSessionStart"
+    },
+    {
+      "name": "Debug finder starting dir",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/myfind", // Output executable
+      "args": [
+        "..",
+        "test"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "miDebuggerPath": "/usr/bin/gdb", // Path to gdb (adjust if necessary)
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "internalConsoleOptions": "openOnSessionStart"
+    }
+  ]
+}

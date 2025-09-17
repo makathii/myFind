@@ -17,15 +17,17 @@
 #include "finder.hpp"
 #include "options.hpp"
 
+namespace fs = std::filesystem;
+
 Finder::Finder(std::shared_ptr<FinderOptions> opts, std::string filename)
     : mOpts(opts), mFilename(filename) {
-  if (mOpts->cis) {
+  if (mOpts->getCaseInsensitive()) {
     stringToLower(mFilename);
   }
-}
+} // namespace
 
 void Finder::search() {
-  if (mOpts->rec) {
+  if (mOpts->getRecursive()) {
     recFind();
   } else {
     Find();
@@ -33,8 +35,8 @@ void Finder::search() {
 }
 
 void Finder::recFind() {
-  for (const auto &entry : std::filesystem::recursive_directory_iterator(
-           mOpts->startDir)) { // recursive directory iterator
+  for (const auto &entry : fs::recursive_directory_iterator(
+           mOpts->getStartDirectory())) { // recursive directory iterator
     std::string currentFile = entry.path().filename().string();
 
     if (Match(currentFile)) {
@@ -51,7 +53,7 @@ void Finder::stringToLower(std::string &str) {
 }
 
 bool Finder::Match(std::string &filename) {
-  if (mOpts->cis) {
+  if (mOpts->getCaseInsensitive()) {
     stringToLower(filename);
   }
 
@@ -60,8 +62,7 @@ bool Finder::Match(std::string &filename) {
 }
 
 void Finder::Find() {
-  for (const auto &entry :
-       std::filesystem::directory_iterator(mOpts->startDir)) {
+  for (const auto &entry : fs::directory_iterator(mOpts->getStartDirectory())) {
 
     // I know we basically have the same code twice,
     std::string currentFile = entry.path().filename().string();

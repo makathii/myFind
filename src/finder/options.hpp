@@ -10,8 +10,20 @@
 
 #include <string>
 
-struct FinderOptions {
-  bool rec; // recursive flag
-  bool cis; // case insesitive flag
-  std::string startDir;
+class FinderOptions {
+public:
+  FinderOptions() = default;
+  ~FinderOptions() = default;
+
+  void setRecursive(bool rec);
+  bool getRecursive() const;
+  void setCaseInsensitive(bool cis);
+  bool getCaseInsensitive() const;
+  void setStartDirectory(std::string startDir);
+  std::string getStartDirectory() const;
+
+private:
+  bool mRec = false; // recursive flag
+  bool mCis = false; // case insesitive flag
+  std::string mStartDir;
 };
