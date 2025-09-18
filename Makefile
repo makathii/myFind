@@ -6,30 +6,61 @@
 # ---
 #
 
+#
+# Compiler flags
+#
+CXX := g++
+CXXFLAGS := -Wall -Werror -Wextra -std=c++20
 
+#
+# Project structure
+#
+SRC_DIR := src
+BUILD_DIR := build
+BIN_DIR := $(BUILD_DIR)/bin
+TARGET := $(BIN_DIR)/myfind
 
-all: main.cpp
-	
-main.cpp: finder options
-	g++ -Wall -Wextra --std=c++20 -o ./build/myFind ./src/main.cpp ./build/finder ./build/options
+#
+# Project files
+#
+SRCS := $(shell find $(SRC_DIR) -name '*.cpp')
+OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o, $(SRCS))
 
-finder: 
-	g++ -Wall -Wextra --std=c++20 -c -o ./build/finder ./src/finder/finder.cpp
+#
+# Default target
+#
+.PHONY: all myfind debug clean
+all: myfind
 
-finder_debug:
-	g++ -Wall -Wextra --std=c++20 -g -c -o ./build/finder ./src/finder/finder.cpp
+#
+# Debug build
+#
+debug: CXXFLAGS += -g -DDEBUG -O0
+debug: $(TARGET)-debug
 
-options:
-	g++ -Wall -Wextra --std=c++20 -c -o ./build/options ./src/finder/options.cpp
+$(TARGET)-debug: $(OBJS)
+	@mkdir -p $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $@
 
-options_debug:
-	g++ -Wall -Wextra --std=c++20 -g -c -o ./build/options ./src/finder/options.cpp
+#
+# Release build
+#
+myfind: CXXFLAGS += -O2
+myfind: $(TARGET)-release
 
-run: 
-	./build/myFind
+$(TARGET)-release: $(OBJS)
+	@mkdir -p $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $(BIN_DIR)/myfind
 
-debug: finder_debug options_debug
-	g++ -Wall -Wextra --std=c++20 -o ./build/myfind ./src/main.cpp ./build/finder ./build/options
+#
+# Object files build
+#
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+#
+# Clean
+#
 clean:
-	rm ./build/myFind
+	rm -rf $(BUILD_DIR)

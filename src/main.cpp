@@ -31,7 +31,7 @@
 #include <vector>
 
 #include "finder/finder.hpp"
-#include "finder/options.hpp"
+#include "options/options.hpp"
 
 void search_f(std::string path, std::string filename, bool rec, bool cis);
 

@@ -10,12 +10,13 @@
 #include <cctype>
 #include <filesystem>
 #include <iostream>
+#include <ranges>
 #include <string>
 #include <unistd.h> //for fork()
 #include <vector>
 
+#include "../options/options.hpp"
 #include "finder.hpp"
-#include "options.hpp"
 
 namespace fs = std::filesystem;
 
