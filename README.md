@@ -1,3 +1,4 @@
 # TODOs
 
-- absolute path not working 
+- synchronized output from children
+- comments
