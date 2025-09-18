@@ -6,7 +6,6 @@
 /// ---
 ///
 
-#include <algorithm>
 #include <cctype>
 #include <filesystem>
 #include <iostream>
@@ -52,7 +51,7 @@ void Finder::recFind() {
 }
 
 void Finder::stringToLower(std::string &str) {
-  for (char &ch : str) {
+  for (auto &ch : str) {
     ch = std::tolower(ch);
   }
 }

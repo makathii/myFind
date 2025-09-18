@@ -3,49 +3,57 @@
     "arguments": [
       "/usr/bin/g++",
       "-Wall",
+      "-Werror",
       "-Wextra",
-      "--std=c++20",
+      "-std=c++20",
       "-g",
+      "-DDEBUG",
+      "-O0",
       "-c",
       "-o",
-      "./build/finder",
-      "./src/finder/finder.cpp"
-    ],
-    "directory": "/workspaces/myFind",
-    "file": "/workspaces/myFind/src/finder/finder.cpp",
-    "output": "/workspaces/myFind/build/finder"
-  },
-  {
-    "arguments": [
-      "/usr/bin/g++",
-      "-Wall",
-      "-Wextra",
-      "--std=c++20",
-      "-g",
-      "-c",
-      "-o",
-      "./build/options",
-      "./src/finder/options.cpp"
-    ],
-    "directory": "/workspaces/myFind",
-    "file": "/workspaces/myFind/src/finder/options.cpp",
-    "output": "/workspaces/myFind/build/options"
-  },
-  {
-    "arguments": [
-      "/usr/bin/g++",
-      "-c",
-      "-Wall",
-      "-Wextra",
-      "--std=c++20",
-      "./build/finder",
-      "./build/options",
-      "-o",
-      "./build/myfind",
-      "./src/main.cpp"
+      "build/main.o",
+      "src/main.cpp"
     ],
     "directory": "/workspaces/myFind",
     "file": "/workspaces/myFind/src/main.cpp",
-    "output": "/workspaces/myFind/build/myfind"
+    "output": "/workspaces/myFind/build/main.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Wall",
+      "-Werror",
+      "-Wextra",
+      "-std=c++20",
+      "-g",
+      "-DDEBUG",
+      "-O0",
+      "-c",
+      "-o",
+      "build/finder/finder.o",
+      "src/finder/finder.cpp"
+    ],
+    "directory": "/workspaces/myFind",
+    "file": "/workspaces/myFind/src/finder/finder.cpp",
+    "output": "/workspaces/myFind/build/finder/finder.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Wall",
+      "-Werror",
+      "-Wextra",
+      "-std=c++20",
+      "-g",
+      "-DDEBUG",
+      "-O0",
+      "-c",
+      "-o",
+      "build/options/options.o",
+      "src/options/options.cpp"
+    ],
+    "directory": "/workspaces/myFind",
+    "file": "/workspaces/myFind/src/options/options.cpp",
+    "output": "/workspaces/myFind/build/options/options.o"
   }
 ]

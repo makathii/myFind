@@ -10,7 +10,8 @@ FROM mcr.microsoft.com/devcontainers/cpp:1-debian-12
 
 RUN sudo apt update &&\
     sudo apt install -y \
-    clang-format
+    clang-format \
+    bear
 
 
 #
@@ -38,22 +39,22 @@ RUN wget https://github.com/clangd/clangd/releases/download/20.1.0/clangd-linux-
 #
 # Catch2 unit test framework
 #
-RUN git clone --recursive -b v3.8.1 --depth 1 https://github.com/catchorg/Catch2.git /catch2 && \
-    cd catch2 && \
-    cmake -Bbuild -H. -DBUILD_TESTING=OFF && \
-    cmake --build build/ --target install && \
-    cd / && \
-    rm -rf /catch2
-
+#RUN git clone --recursive -b v3.8.1 --depth 1 https://github.com/catchorg/Catch2.git /catch2 && \
+#    cd catch2 && \
+#    cmake -Bbuild -H. -DBUILD_TESTING=OFF && \
+#    cmake --build build/ --target install && \
+#    cd / && \
+#    rm -rf /catch2
 #
-# spd
-#
-RUN git clone --recursive -b v1.15.3 --depth 1 https://github.com/gabime/spdlog.git /spdlog && \
-    cd /spdlog && \
-    cmake -S . && \
-    make install && \
-    cd / && \
-    rm -rf /spdlog
+##
+## spd
+##
+#RUN git clone --recursive -b v1.15.3 --depth 1 https://github.com/gabime/spdlog.git /spdlog && \
+#    cd /spdlog && \
+#    cmake -S . && \
+#    make install && \
+#    cd / && \
+#    rm -rf /spdlog
 
 
 RUN ldconfig
