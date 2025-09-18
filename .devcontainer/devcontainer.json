@@ -19,7 +19,8 @@
 				"eamodio.gitlens",
 				"yzhang.markdown-all-in-one",
 				"ms-azuretools.vscode-containers",
-				"psioniq.psi-header"
+				"psioniq.psi-header",
+				"ms-vscode.makefile-tools"
 			]
 		}
 	}
