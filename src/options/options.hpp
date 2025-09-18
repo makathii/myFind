@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <string>
 
+namespace fs = std::filesystem;
 class FinderOptions {
 public:
   FinderOptions() = default;
@@ -26,9 +27,9 @@ public:
 private:
   bool mRec = false; // recursive flag
   bool mCis = false; // case insesitive flag
-  std::filesystem::path mStartDir;
+  fs::path mStartDir;
 
-  void isCurrentPath(std::string path);
-  void isParentPath(std::string path);
-  void isValidPath(std::string path);
+  void getCurrentPath(std::string &path);
+  void getParentPath(std::string &path);
+  void getComplexPath(std::string &path);
 };

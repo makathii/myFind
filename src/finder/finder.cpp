@@ -11,6 +11,7 @@
 #include <iostream>
 #include <ranges>
 #include <string>
+#include <system_error>
 #include <unistd.h> //for fork()
 #include <vector>
 
@@ -35,18 +36,22 @@ void Finder::search() {
 }
 
 void Finder::recFind() {
-  try {
-    for (const auto &entry : fs::recursive_directory_iterator(
-             mOpts->getStartDirectory())) { // recursive directory iterator
-      std::string currentFile = entry.path().filename().string();
-
-      if (Match(currentFile)) {
-        std::cout << getpid() << ": " << mFilename << ": "
-                  << entry.path().string() << "\n";
-      }
+  std::error_code err;
+  // recursive directory iterator
+  for (const auto &entry : fs::recursive_directory_iterator(
+           mOpts->getStartDirectory(),
+           fs::directory_options::skip_permission_denied, err)) {
+    if (err) {
+      std::cerr << "Cannot open directory " << mOpts->getStartDirectory()
+                << ": " << err.message() << std::endl;
+      continue;
     }
-  } catch (fs::filesystem_error &e) {
-    std::cerr << "myfind failed: " << e.what() << std::endl;
+    std::string currentFile = entry.path().filename().string();
+
+    if (Match(currentFile)) {
+      std::cout << getpid() << ": " << mFilename << ": "
+                << entry.path().string() << "\n";
+    }
   }
 }
 
@@ -66,20 +71,18 @@ bool Finder::Match(std::string &filename) {
 }
 
 void Finder::Find() {
-  try {
-    for (const auto &entry :
-         fs::directory_iterator(mOpts->getStartDirectory())) {
+  std::error_code err;
+  for (const auto &entry : fs::directory_iterator(
+           mOpts->getStartDirectory(),
+           fs::directory_options::skip_permission_denied, err)) {
 
-      // I know we basically have the same code twice,
-      std::string currentFile = entry.path().filename().string();
+    // I know we basically have the same code twice,
+    std::string currentFile = entry.path().filename().string();
 
-      // but I struggled to make it work with a seperate function
-      if (Match(currentFile)) {
-        std::cout << getpid() << ": " << mFilename << ": "
-                  << entry.path().string() << "\n";
-      }
+    // but I struggled to make it work with a seperate function
+    if (Match(currentFile)) {
+      std::cout << getpid() << ": " << mFilename << ": "
+                << entry.path().string() << "\n";
     }
-  } catch (fs::filesystem_error &e) {
-    std::cerr << "myfind failed: " << e.what() << std::endl;
   }
 }

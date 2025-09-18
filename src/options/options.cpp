@@ -14,6 +14,7 @@
 #include <iterator>
 #include <stdexcept>
 #include <string>
+#include <system_error>
 #include <variant>
 
 #include "options.hpp"
@@ -31,17 +32,17 @@ bool FinderOptions::getCaseInsensitive() const { return mCis; }
 void FinderOptions::setStartDirectory(std::string startDir) {
   auto length = startDir.size();
   if (1 == length) {
-    isCurrentPath(startDir);
+    getCurrentPath(startDir);
   } else if (2 == length) {
-    isParentPath(startDir);
+    getParentPath(startDir);
   } else {
-    isValidPath(startDir);
+    getComplexPath(startDir);
   }
 }
 
 std::string FinderOptions::getStartDirectory() const { return mStartDir; }
 
-void FinderOptions::isCurrentPath(std::string path) {
+void FinderOptions::getCurrentPath(std::string &path) {
   if (path.starts_with(".")) {
     mStartDir = fs::current_path();
   } else if (path.starts_with("/")) {
@@ -51,7 +52,7 @@ void FinderOptions::isCurrentPath(std::string path) {
   }
 }
 
-void FinderOptions::isParentPath(std::string path) {
+void FinderOptions::getParentPath(std::string &path) {
   if (path.starts_with("..")) {
     mStartDir = fs::current_path().parent_path();
   } else if (path.starts_with("./")) {
@@ -61,24 +62,27 @@ void FinderOptions::isParentPath(std::string path) {
   }
 }
 
-void FinderOptions::isValidPath(std::string path) {
-  mStartDir = fs::current_path();
-  std::size_t index = path.find_first_not_of("../");
-  int parent_count;
-  std::string suffix;
+void FinderOptions::getComplexPath(std::string &path) {
+  mStartDir = path;
+  if (!mStartDir.is_absolute()) {
+    mStartDir = fs::current_path();
+    std::size_t index = path.find_first_not_of("../");
+    int parent_count;
+    std::string suffix;
 
-  if (std::variant_npos != index) {
-    parent_count = path.substr(0, index).size() / 3;
-    suffix = path.substr(index);
-  } else {
-    parent_count = path.size() / 3;
-  }
+    if (std::variant_npos != index) {
+      parent_count = path.substr(0, index).size() / 3;
+      suffix = path.substr(index);
+    } else {
+      parent_count = path.size() / 3;
+    }
 
-  for (int i = 0; i < parent_count; i++) {
-    mStartDir = mStartDir.parent_path();
-  }
+    for (int i = 0; i < parent_count; i++) {
+      mStartDir = mStartDir.parent_path();
+    }
 
-  if (!suffix.empty()) {
-    mStartDir = mStartDir.string() + "/" + suffix;
+    if (!suffix.empty()) {
+      mStartDir = mStartDir.string() + "/" + suffix;
+    }
   }
 }

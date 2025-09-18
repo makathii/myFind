@@ -29,7 +29,7 @@
       "program": "${workspaceFolder}/build/bin/myfind-debug", // Output executable
       "args": [
         "-R",
-        "./example",
+        "/",
         "test",
         "test.txt"
       ],
