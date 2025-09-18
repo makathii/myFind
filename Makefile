@@ -11,7 +11,7 @@
 all: main.cpp
 	
 main.cpp: finder options
-	g++ -Wall -Wextra --std=c++20 -o ./build/myFind ./src/main.cpp ./build/finder
+	g++ -Wall -Wextra --std=c++20 -o ./build/myFind ./src/main.cpp ./build/finder ./build/options
 
 finder: 
 	g++ -Wall -Wextra --std=c++20 -c -o ./build/finder ./src/finder/finder.cpp
