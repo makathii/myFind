@@ -44,6 +44,8 @@ std::string FinderOptions::getStartDirectory() const { return mStartDir; }
 void FinderOptions::isCurrentPath(std::string path) {
   if (path.starts_with(".")) {
     mStartDir = fs::current_path();
+  } else if (path.starts_with("/")) {
+    mStartDir = path;
   } else {
     throw std::invalid_argument("Invalid path");
   }

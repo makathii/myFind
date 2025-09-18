@@ -36,14 +36,18 @@ void Finder::search() {
 }
 
 void Finder::recFind() {
-  for (const auto &entry : fs::recursive_directory_iterator(
-           mOpts->getStartDirectory())) { // recursive directory iterator
-    std::string currentFile = entry.path().filename().string();
+  try {
+    for (const auto &entry : fs::recursive_directory_iterator(
+             mOpts->getStartDirectory())) { // recursive directory iterator
+      std::string currentFile = entry.path().filename().string();
 
-    if (Match(currentFile)) {
-      std::cout << getpid() << ": " << mFilename << ": "
-                << entry.path().string() << "\n";
+      if (Match(currentFile)) {
+        std::cout << getpid() << ": " << mFilename << ": "
+                  << entry.path().string() << "\n";
+      }
     }
+  } catch (fs::filesystem_error &e) {
+    std::cerr << "myfind failed: " << e.what() << std::endl;
   }
 }
 
@@ -63,15 +67,20 @@ bool Finder::Match(std::string &filename) {
 }
 
 void Finder::Find() {
-  for (const auto &entry : fs::directory_iterator(mOpts->getStartDirectory())) {
+  try {
+    for (const auto &entry :
+         fs::directory_iterator(mOpts->getStartDirectory())) {
 
-    // I know we basically have the same code twice,
-    std::string currentFile = entry.path().filename().string();
+      // I know we basically have the same code twice,
+      std::string currentFile = entry.path().filename().string();
 
-    // but I struggled to make it work with a seperate function
-    if (Match(currentFile)) {
-      std::cout << getpid() << ": " << mFilename << ": "
-                << entry.path().string() << "\n";
+      // but I struggled to make it work with a seperate function
+      if (Match(currentFile)) {
+        std::cout << getpid() << ": " << mFilename << ": "
+                  << entry.path().string() << "\n";
+      }
     }
+  } catch (fs::filesystem_error &e) {
+    std::cerr << "myfind failed: " << e.what() << std::endl;
   }
 }
