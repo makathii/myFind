@@ -65,7 +65,9 @@ int main(int argc, char *argv[]) {
   }
 
   try {
-    opts->setStartDirectory(argv[optind]);
+    if (!opts->setStartDirectory(argv[optind])) {
+      return 1;
+    }
   } catch (std::invalid_argument &e) {
     std::cerr << "Error: " << e.what() << std::endl;
   }

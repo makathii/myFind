@@ -29,60 +29,19 @@ void FinderOptions::setCaseInsensitive(bool cis) { mCis = cis; }
 
 bool FinderOptions::getCaseInsensitive() const { return mCis; }
 
-void FinderOptions::setStartDirectory(std::string startDir) {
-  auto length = startDir.size();
-  if (1 == length) {
-    getCurrentPath(startDir);
-  } else if (2 == length) {
-    getParentPath(startDir);
-  } else {
-    getComplexPath(startDir);
+bool FinderOptions::setStartDirectory(std::string startDir) {
+  fs::path path = startDir;
+  try {
+    if (path.is_absolute()) {
+      mStartDir = fs::absolute(path);
+    } else {
+      mStartDir = fs::canonical(path);
+    }
+    return true;
+  } catch (fs::filesystem_error &e) {
+    std::cerr << "Error: " << e.what() << std::endl;
+    return false;
   }
 }
 
 std::string FinderOptions::getStartDirectory() const { return mStartDir; }
-
-void FinderOptions::getCurrentPath(std::string &path) {
-  if (path.starts_with(".")) {
-    mStartDir = fs::current_path();
-  } else if (path.starts_with("/")) {
-    mStartDir = path;
-  } else {
-    throw std::invalid_argument("Invalid path");
-  }
-}
-
-void FinderOptions::getParentPath(std::string &path) {
-  if (path.starts_with("..")) {
-    mStartDir = fs::current_path().parent_path();
-  } else if (path.starts_with("./")) {
-    mStartDir = fs::current_path();
-  } else {
-    throw std::invalid_argument("Invalid path");
-  }
-}
-
-void FinderOptions::getComplexPath(std::string &path) {
-  mStartDir = path;
-  if (!mStartDir.is_absolute()) {
-    mStartDir = fs::current_path();
-    std::size_t index = path.find_first_not_of("../");
-    int parent_count;
-    std::string suffix;
-
-    if (std::variant_npos != index) {
-      parent_count = path.substr(0, index).size() / 3;
-      suffix = path.substr(index);
-    } else {
-      parent_count = path.size() / 3;
-    }
-
-    for (int i = 0; i < parent_count; i++) {
-      mStartDir = mStartDir.parent_path();
-    }
-
-    if (!suffix.empty()) {
-      mStartDir = mStartDir.string() + "/" + suffix;
-    }
-  }
-}

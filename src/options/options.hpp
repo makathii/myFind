@@ -21,15 +21,11 @@ public:
   bool getRecursive() const;
   void setCaseInsensitive(bool cis);
   bool getCaseInsensitive() const;
-  void setStartDirectory(std::string startDir);
+  bool setStartDirectory(std::string startDir);
   std::string getStartDirectory() const;
 
 private:
   bool mRec = false; // recursive flag
   bool mCis = false; // case insesitive flag
   fs::path mStartDir;
-
-  void getCurrentPath(std::string &path);
-  void getParentPath(std::string &path);
-  void getComplexPath(std::string &path);
 };
