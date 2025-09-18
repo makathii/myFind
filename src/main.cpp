@@ -24,6 +24,7 @@
 #include <filesystem>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <sys/wait.h>
 #include <unistd.h> //for fork()
@@ -63,15 +64,20 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  opts->setStartDirectory(argv[optind]);
+  try {
+    opts->setStartDirectory(argv[optind]);
+  } catch (std::invalid_argument &e) {
+    std::cerr << "Error: " << e.what() << std::endl;
+  }
   std::vector<std::string> filenames;
+
   for (int i = optind + 1; i < argc; i++) {
     filenames.push_back(argv[i]);
   }
 
   std::vector<pid_t> children;
   for (auto &f : filenames) {
-    pid_t pid = 0;
+    pid_t pid = fork();
     if (pid == 0) { // child process
       Finder finder(opts, f);
       finder.search();
