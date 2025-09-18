@@ -28,7 +28,7 @@
       "request": "launch",
       "program": "${workspaceFolder}/build/myfind", // Output executable
       "args": [
-        "..",
+        "../../../",
         "test"
       ],
       "stopAtEntry": false,

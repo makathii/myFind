@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <filesystem>
 #include <string>
 
 class FinderOptions {
@@ -25,5 +26,9 @@ public:
 private:
   bool mRec = false; // recursive flag
   bool mCis = false; // case insesitive flag
-  std::string mStartDir;
+  std::filesystem::path mStartDir;
+
+  void isCurrentPath(std::string path);
+  void isParentPath(std::string path);
+  void isValidPath(std::string path);
 };

@@ -1,0 +1,51 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Wall",
+      "-Wextra",
+      "--std=c++20",
+      "-g",
+      "-c",
+      "-o",
+      "./build/finder",
+      "./src/finder/finder.cpp"
+    ],
+    "directory": "/workspaces/myFind",
+    "file": "/workspaces/myFind/src/finder/finder.cpp",
+    "output": "/workspaces/myFind/build/finder"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Wall",
+      "-Wextra",
+      "--std=c++20",
+      "-g",
+      "-c",
+      "-o",
+      "./build/options",
+      "./src/finder/options.cpp"
+    ],
+    "directory": "/workspaces/myFind",
+    "file": "/workspaces/myFind/src/finder/options.cpp",
+    "output": "/workspaces/myFind/build/options"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "--std=c++20",
+      "./build/finder",
+      "./build/options",
+      "-o",
+      "./build/myfind",
+      "./src/main.cpp"
+    ],
+    "directory": "/workspaces/myFind",
+    "file": "/workspaces/myFind/src/main.cpp",
+    "output": "/workspaces/myFind/build/myfind"
+  }
+]
