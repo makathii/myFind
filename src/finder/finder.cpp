@@ -1,15 +1,18 @@
 ///
 /// \file finder.cpp
-/// \author Felix Dilly
+/// \author Felix Dilly Katharina Markus
 /// \date Created at: 2025-09-12
 /// \date Last modified at: 2025-09-12
 /// ---
 ///
 
 #include <cctype>
+#include <cstdio>
 #include <filesystem>
 #include <iostream>
+#include <ostream>
 #include <ranges>
+#include <sstream>
 #include <string>
 #include <system_error>
 #include <unistd.h> //for fork()
@@ -20,8 +23,9 @@
 
 namespace fs = std::filesystem;
 
-Finder::Finder(std::shared_ptr<FinderOptions> opts, std::string filename)
-    : mOpts(opts), mFilename(filename) {
+Finder::Finder(std::shared_ptr<FinderOptions> opts, std::string &filename,
+               FILE *output)
+    : mOpts(opts), mFilename(filename), mOutput(output) {
   if (mOpts->getCaseInsensitive()) {
     stringToLower(mFilename);
   }
@@ -49,8 +53,10 @@ void Finder::recFind() {
     std::string currentFile = entry.path().filename().string();
 
     if (Match(currentFile)) {
-      std::cout << getpid() << ": " << mFilename << ": "
-                << entry.path().string() << "\n";
+      std::ostringstream msg;
+      msg << getpid() << ": " << mFilename << ": " << entry.path().string()
+          << "\n";
+      fprintf(mOutput, msg.str().c_str());
     }
   }
 }
@@ -81,8 +87,10 @@ void Finder::Find() {
 
     // but I struggled to make it work with a seperate function
     if (Match(currentFile)) {
-      std::cout << getpid() << ": " << mFilename << ": "
-                << entry.path().string() << "\n";
+      std::ostringstream msg;
+      msg << getpid() << ": " << mFilename << ": " << entry.path().string()
+          << "\n";
+      fprintf(mOutput, msg.str().c_str());
     }
   }
 }

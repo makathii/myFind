@@ -20,10 +20,12 @@
 
 // on that note: what is the correct way to sort includes? I just put them in
 // alphabetic order
+#include <cstdio>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <memory>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <sys/wait.h>
@@ -37,8 +39,9 @@ void search_f(std::string path, std::string filename, bool rec, bool cis);
 
 int main(int argc, char *argv[]) {
   int opt;
-  auto opts = std::make_shared<FinderOptions>();
+  auto opts = std::make_shared<FinderOptions>(); // create options object
 
+  // Parse myfind options
   while ((opt = getopt(argc, argv, "Ri")) != -1) {
     switch (opt) {
     case 'R':
@@ -57,13 +60,14 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  // because we need at least searchpath and one filename
+  // check if required arguments are given
   if (argc - optind < 2) {
     std::cerr << "Usage: " << argv[0]
               << " [-R] [-i] searchpath filename1 [filename2]...[filenameN]\n";
     return 1;
   }
 
+  // try to resolve starting directory
   try {
     if (!opts->setStartDirectory(argv[optind])) {
       return 1;
@@ -71,28 +75,64 @@ int main(int argc, char *argv[]) {
   } catch (std::invalid_argument &e) {
     std::cerr << "Error: " << e.what() << std::endl;
   }
-  std::vector<std::string> filenames;
 
+  // collect files to find
+  std::vector<std::string> filenames;
   for (int i = optind + 1; i < argc; i++) {
     filenames.push_back(argv[i]);
   }
 
+  // Create pipe
+  int fd[2];
+  if (pipe(fd) < 0) {
+    std::cerr << "Failed to create pipe" << std::endl;
+    return 1;
+  }
+
+  // Spawn children processes
   std::vector<pid_t> children;
   for (auto &f : filenames) {
     pid_t pid = fork();
-    if (pid == 0) { // child process
-      Finder finder(opts, f);
+    if (pid == 0) {
+      //
+      // Child process
+      //
+
+      close(fd[0]);
+      FILE *pipe_output = fdopen(fd[1], "w");
+
+      Finder finder(opts, f, pipe_output);
       finder.search();
 
       exit(EXIT_SUCCESS); // child process exits here
     } else if (pid < 0) {
-      std::cerr << "failed to spawn child" << std::endl;
+      std::cerr << "Failed to spawn child" << std::endl;
       return 1;
     } else if (pid > 0) { // parent process
       children.push_back(pid);
     }
   }
 
+  //
+  // Parent process
+  //
+  close(fd[1]); // close write pipe
+
+  // open read file descriptor
+  FILE *input = fdopen(fd[0], "r");
+  if (input) {
+    char buffer[1024];
+
+    while (fgets(buffer, sizeof(buffer), input)) {
+      std::cout << buffer;
+    }
+  } else {
+    // opening file descriptor failed
+    std::cerr << "Failed to open pipe input" << std::endl;
+  }
+  close(fd[0]); // close read pipe when finished
+
+  // clean up child processes
   for (pid_t pid : children) {
     int status;
     waitpid(pid, &status, 0); // parent waits for each child to finish

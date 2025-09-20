@@ -1,6 +1,6 @@
 ///
 /// \file options.hpp
-/// \author Felix Dilly
+/// \author Felix Dilly Katharina Markus
 /// \date Created at: 2025-09-12
 /// \date Last modified at: 2025-09-12
 /// ---
@@ -12,14 +12,16 @@
 #include <string>
 
 namespace fs = std::filesystem;
+
+/// @brief object storing myfind options and parsing starting directory
 class FinderOptions {
 public:
   FinderOptions() = default;
   ~FinderOptions() = default;
 
-  void setRecursive(bool rec);
+  void setRecursive();
   bool getRecursive() const;
-  void setCaseInsensitive(bool cis);
+  void setCaseInsensitive();
   bool getCaseInsensitive() const;
   bool setStartDirectory(std::string startDir);
   std::string getStartDirectory() const;
