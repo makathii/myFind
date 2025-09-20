@@ -13,7 +13,7 @@
 
 namespace fs = std::filesystem;
 
-/// @brief object storing myfind options and parsing starting directory
+/// @class object storing myfind options and parsing starting directory
 class FinderOptions {
 public:
   FinderOptions() = default;

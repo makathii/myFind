@@ -23,6 +23,9 @@
 
 namespace fs = std::filesystem;
 
+/// @brief stores options, file descriptor and filename -> in case of case
+///        insensitive option converts filename to lowercase
+///
 Finder::Finder(std::shared_ptr<FinderOptions> opts, std::string &filename,
                FILE *output)
     : mOpts(opts), mFilename(filename), mOutput(output) {
@@ -31,6 +34,8 @@ Finder::Finder(std::shared_ptr<FinderOptions> opts, std::string &filename,
   }
 } // namespace
 
+/// @brief selects correct find method depending on recursive option
+///
 void Finder::search() {
   if (mOpts->getRecursive()) {
     recFind();
@@ -39,20 +44,27 @@ void Finder::search() {
   }
 }
 
+/// @brief find method that recurses into subdirectories
+///
 void Finder::recFind() {
   std::error_code err;
+
   // recursive directory iterator
+  // skipping directories with missing permissions
   for (const auto &entry : fs::recursive_directory_iterator(
            mOpts->getStartDirectory(),
            fs::directory_options::skip_permission_denied, err)) {
+    // if any unexpected errors happen skip
     if (err) {
       std::cerr << "Cannot open directory " << mOpts->getStartDirectory()
                 << ": " << err.message() << std::endl;
       continue;
     }
-    std::string currentFile = entry.path().filename().string();
 
+    // get filename and try to match
+    std::string currentFile = entry.path().filename().string();
     if (Match(currentFile)) {
+      // create message and write to pipe
       std::ostringstream msg;
       msg << getpid() << ": " << mFilename << ": " << entry.path().string()
           << "\n";
@@ -61,12 +73,17 @@ void Finder::recFind() {
   }
 }
 
+/// @brief creates a lower case string
+///
 void Finder::stringToLower(std::string &str) {
   for (auto &ch : str) {
     ch = std::tolower(ch);
   }
 }
 
+/// @brief matches given string to filename to find
+///        converts given string to lower case if option is active
+///
 bool Finder::Match(std::string &filename) {
   if (mOpts->getCaseInsensitive()) {
     stringToLower(filename);
@@ -76,20 +93,25 @@ bool Finder::Match(std::string &filename) {
                             [](char a, char b) { return a == b; });
 }
 
+/// find method that stays in working directory
+///
 void Finder::Find() {
   std::error_code err;
+
+  // directory iterator
+  // skips with missing permissions
   for (const auto &entry : fs::directory_iterator(
            mOpts->getStartDirectory(),
            fs::directory_options::skip_permission_denied, err)) {
 
-    // I know we basically have the same code twice,
+    // get filename and try to match
     std::string currentFile = entry.path().filename().string();
-
-    // but I struggled to make it work with a seperate function
     if (Match(currentFile)) {
+      // create message and write to pipe
       std::ostringstream msg;
       msg << getpid() << ": " << mFilename << ": " << entry.path().string()
           << "\n";
+
       fprintf(mOutput, msg.str().c_str());
     }
   }

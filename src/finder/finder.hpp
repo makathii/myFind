@@ -14,6 +14,7 @@
 #include <ostream>
 #include <vector>
 
+/// @class object with the sole task to find file(s) from a specified root path
 class Finder {
 public:
   Finder(std::shared_ptr<FinderOptions> opts, std::string &filename,
