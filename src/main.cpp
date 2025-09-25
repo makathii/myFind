@@ -35,8 +35,6 @@
 #include "finder/finder.hpp"
 #include "options/options.hpp"
 
-void search_f(std::string path, std::string filename, bool rec, bool cis);
-
 int main(int argc, char *argv[]) {
   int opt;
   auto opts = std::make_shared<FinderOptions>(); // create options object
