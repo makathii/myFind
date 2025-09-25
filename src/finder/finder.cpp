@@ -17,18 +17,26 @@
 #include <system_error>
 #include <unistd.h> //for fork()
 #include <vector>
+#include <sys/msg.h>
+#include <cstring>
+#include <cerrno>
 
 #include "../options/options.hpp"
 #include "finder.hpp"
 
 namespace fs = std::filesystem;
 
+struct message_t{
+  long mtype;
+  char mtext[1024];
+};
+
 /// @brief stores options, file descriptor and filename -> in case of case
 ///        insensitive option converts filename to lowercase
 ///
 Finder::Finder(std::shared_ptr<FinderOptions> opts, std::string &filename,
-               FILE *output)
-    : mOpts(opts), mFilename(filename), mOutput(output) {
+                int msgid)
+    : mOpts(opts), mFilename(filename), mMsgid(msgid) {
   if (mOpts->getCaseInsensitive()) {
     stringToLower(mFilename);
   }
@@ -37,11 +45,18 @@ Finder::Finder(std::shared_ptr<FinderOptions> opts, std::string &filename,
 /// @brief selects correct find method depending on recursive option
 ///
 void Finder::search() {
-  if (mOpts->getRecursive()) {
-    recFind();
-  } else {
-    Find();
+  try{
+    if (mOpts->getRecursive()) {
+      recFind();
+    } else {
+      Find();
+    }
+}catch(const std::filesystem::filesystem_error& e){
+  std::cerr<<"Filesystem error in process: "<<getpid()<<": "<<e.what()<<std::endl;
   }
+  //indicate that this child is done
+  //printf("Child %d done\n", getpid());  //proper debugging is for losers
+  sendMessage("END");
 }
 
 /// @brief find method that recurses into subdirectories
@@ -68,7 +83,7 @@ void Finder::recFind() {
       std::ostringstream msg;
       msg << getpid() << ": " << mFilename << ": " << entry.path().string()
           << "\n";
-      fprintf(mOutput, msg.str().c_str());
+      sendMessage(msg.str());
     }
   }
 }
@@ -93,7 +108,7 @@ bool Finder::Match(std::string &filename) {
                             [](char a, char b) { return a == b; });
 }
 
-/// find method that stays in working directory
+/// @brief find method that stays in working directory
 ///
 void Finder::Find() {
   std::error_code err;
@@ -107,12 +122,33 @@ void Finder::Find() {
     // get filename and try to match
     std::string currentFile = entry.path().filename().string();
     if (Match(currentFile)) {
-      // create message and write to pipe
+      // create message and write to (pipe) actually message queueueue
       std::ostringstream msg;
       msg << getpid() << ": " << mFilename << ": " << entry.path().string()
           << "\n";
+      sendMessage(msg.str());
+      }
+  }
+}
 
-      fprintf(mOutput, msg.str().c_str());
+/// @brief sends a message to the message queue
+///
+void Finder::sendMessage(const std::string& message){
+  message_t msg;
+  msg.mtype = 1; 
+  if(message.size()<sizeof(msg.mtext)){   //to ensure message fits into buffer
+    strncpy(msg.mtext, message.c_str(), sizeof(msg.mtext)-1);
+    msg.mtext[sizeof(msg.mtext)-1] = '\0'; //ensure null termination
+    
+    if(msgsnd(mMsgid, &msg, strlen(msg.mtext)+1, 0) == -1){
+      std::cerr<<"Failed to send message to queue: "<<strerror(errno)<<std::endl;
+    }
+  }else{
+    strncpy(msg.mtext,message.c_str(), sizeof(msg.mtext)-1);
+    msg.mtext[sizeof(msg.mtext)-1] = '\0'; //ensure null
+
+    if(msgsnd(mMsgid, &msg, strlen(msg.mtext)+1, 0) == -1){
+      std::cerr<<"Failed to send message to queue: "<<strerror(errno)<<std::endl;
     }
   }
 }

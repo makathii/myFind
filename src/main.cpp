@@ -20,12 +20,19 @@
 
 // on that note: what is the correct way to sort includes? I just put them in
 // alphabetic order
+#include <cerrno>
+#include <csignal>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <errno.h>
 #include <filesystem>
 #include <iostream>
 #include <memory>
+#include <sys/msg.h>
+#include <sys/ipc.h>
 #include <ostream>
+#include <signal.h>
 #include <stdexcept>
 #include <string>
 #include <sys/wait.h>
@@ -34,6 +41,23 @@
 
 #include "finder/finder.hpp"
 #include "options/options.hpp"
+
+//message queueueue structure
+struct message_t{
+  long mtype;
+  char mtext[1024];
+};
+
+//hit me for this
+static int s_msgid=-1;
+
+//Signal handler to clean up message queueueue
+void signalHandler(int signum){
+  if(s_msgid != -1){
+    msgctl(s_msgid, IPC_RMID, nullptr);
+  }
+  _exit(signum);  //cause we no no want recursive cleanie weanies
+}
 
 int main(int argc, char *argv[]) {
   int opt;
@@ -80,12 +104,27 @@ int main(int argc, char *argv[]) {
     filenames.push_back(argv[i]);
   }
 
-  // Create pipe
-  int fd[2];
-  if (pipe(fd) < 0) {
-    std::cerr << "Failed to create pipe" << std::endl;
+  //create message queue
+  key_t key = ftok("/tmp", 65); // generate unique key
+  if(key==-1){
+    std::cerr<<"Failed to generate key for message queue"<<std::endl;
+    key = 12345;  //this is not good but should work if only this program uses it
+  }
+
+  int msgid = msgget(key, 0666 | IPC_CREAT);
+  if(msgid == -1){
+    std::cerr<<"Failed to create message queue: "<<strerror(errno)<<std::endl;
     return 1;
   }
+
+  //signal handling for cleanies
+  s_msgid=msgid;
+  struct sigaction sa;
+  sa.sa_handler = signalHandler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sigaction(SIGINT, &sa, nullptr);
+  sigaction(SIGTERM, &sa, nullptr);
 
   // Spawn children processes
   std::vector<pid_t> children;
@@ -95,16 +134,16 @@ int main(int argc, char *argv[]) {
       //
       // Child process
       //
+      signal(SIGINT, SIG_DFL); //reset signal handling for child
+      signal(SIGTERM, SIG_DFL);
 
-      close(fd[0]);
-      FILE *pipe_output = fdopen(fd[1], "w");
-
-      Finder finder(opts, f, pipe_output);
+      Finder finder(opts, f, msgid);  
       finder.search();
 
       exit(EXIT_SUCCESS); // child process exits here
     } else if (pid < 0) {
       std::cerr << "Failed to spawn child" << std::endl;
+      msgctl(msgid, IPC_RMID, nullptr); //clean up message queue
       return 1;
     } else if (pid > 0) { // parent process
       children.push_back(pid);
@@ -114,26 +153,51 @@ int main(int argc, char *argv[]) {
   //
   // Parent process
   //
-  close(fd[1]); // close write pipe
+  
+  //recieve messages from queueue
+  message_t message;
+  int active_children = children.size();
+  bool found=false;
 
-  // open read file descriptor
-  FILE *input = fdopen(fd[0], "r");
-  if (input) {
-    char buffer[1024];
+  while(active_children>0){
+    ssize_t bytes_received = msgrcv(msgid, &message, sizeof(message.mtext), 1, 0);
 
-    while (fgets(buffer, sizeof(buffer), input)) {
-      std::cout << buffer;
+    if(bytes_received>0){
+      //check for termination message
+      if(strcmp(message.mtext, "END")==0){
+        active_children--;
+      }else{
+        std::cout<<message.mtext<<std::endl;
+        found=true;
+      }
+  }else if(bytes_received == -1){
+    if(errno==EIDRM || errno==EINTR){
+      break; //message queue deleted or interrupted by signal
+    }else{
+      std::cerr<<"Failed to receive message from queue: "<<strerror(errno)<<std::endl;
+      break;
     }
-  } else {
-    // opening file descriptor failed
-    std::cerr << "Failed to open pipe input" << std::endl;
   }
-  close(fd[0]); // close read pipe when finished
+}
 
   // clean up child processes
   for (pid_t pid : children) {
     int status;
-    waitpid(pid, &status, 0); // parent waits for each child to finish
+    waitpid(pid, &status, 0); //parent waits for each child to finish
   }
+
+  //clean up the message after all bebes are done
+  if(msgctl(msgid, IPC_RMID, nullptr) == -1){
+    if(errno != EIDRM){ //ignore if already deleted
+      std::cerr<<"Failed to delete message queue: "<<strerror(errno)<<std::endl;
+    }
+  }
+
+  if(!found){
+    std::cout<<"No files found"<<std::endl;
+  }
+
+  //reset the shameful global
+  s_msgid=-1;
   return 0;
 }

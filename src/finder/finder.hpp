@@ -18,7 +18,7 @@
 class Finder {
 public:
   Finder(std::shared_ptr<FinderOptions> opts, std::string &filename,
-         FILE *output);
+         int msgid);
   ~Finder() = default;
 
   void search();
@@ -32,4 +32,8 @@ private:
   bool Match(std::string &filename);
   void recFind();
   void Find();
+
+  //message queueue stuff
+  int mMsgid;
+  void sendMessage(const std::string &text);
 };
