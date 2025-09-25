@@ -45,10 +45,10 @@ int main(int argc, char *argv[]) {
   while ((opt = getopt(argc, argv, "Ri")) != -1) {
     switch (opt) {
     case 'R':
-      opts->setRecursive(true);
+      opts->setRecursive();
       break;
     case 'i':
-      opts->setCaseInsensitive(true);
+      opts->setCaseInsensitive();
       break;
     case '?':
       std::cerr
