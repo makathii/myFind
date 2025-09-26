@@ -29,14 +29,14 @@ OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o, $(SRCS))
 #
 # Default target
 #
-.PHONY: all myfind debug clean
-all: myfind
+.PHONY: clean all myfind 
+all: clean myfind
 
 #
 # Debug build
 #
 debug: CXXFLAGS += -g -DDEBUG -O0
-debug: $(TARGET)-debug
+debug: clean $(TARGET)-debug
 
 $(TARGET)-debug: $(OBJS)
 	@mkdir -p $(BIN_DIR)
