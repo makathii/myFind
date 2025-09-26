@@ -165,6 +165,7 @@ int main(int argc, char *argv[]) {
       if (strcmp(message.mPath, "END") == 0) {
         active_children--;
       } else {
+        // print result
         std::cout << message.mPid << ": " << message.mFilename << ": "
                   << message.mPath << std::endl;
         found = true;
