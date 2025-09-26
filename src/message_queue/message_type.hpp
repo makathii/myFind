@@ -9,11 +9,12 @@
 #pragma once
 
 #include <limits.h>
+#include <linux/limits.h>
 
 // message queueueue structure
 struct message_t {
   long mType;
   int mPid;
   char mFilename[NAME_MAX + 1];
-  char mPath[1024];
+  char mPath[PATH_MAX];
 };
