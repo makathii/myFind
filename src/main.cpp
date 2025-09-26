@@ -29,34 +29,29 @@
 #include <filesystem>
 #include <iostream>
 #include <memory>
-#include <sys/msg.h>
-#include <sys/ipc.h>
 #include <ostream>
 #include <signal.h>
 #include <stdexcept>
 #include <string>
+#include <sys/ipc.h>
+#include <sys/msg.h>
 #include <sys/wait.h>
 #include <unistd.h> //for fork()
 #include <vector>
 
 #include "finder/finder.hpp"
+#include "message_queue/message_type.hpp"
 #include "options/options.hpp"
 
-//message queueueue structure
-struct message_t{
-  long mtype;
-  char mtext[1024];
-};
+// hit me for this
+static int s_msgid = -1;
 
-//hit me for this
-static int s_msgid=-1;
-
-//Signal handler to clean up message queueueue
-void signalHandler(int signum){
-  if(s_msgid != -1){
+// Signal handler to clean up message queueueue
+void signalHandler(int signum) {
+  if (s_msgid != -1) {
     msgctl(s_msgid, IPC_RMID, nullptr);
   }
-  _exit(signum);  //cause we no no want recursive cleanie weanies
+  _exit(signum); // cause we no no want recursive cleanie weanies
 }
 
 int main(int argc, char *argv[]) {
@@ -104,21 +99,23 @@ int main(int argc, char *argv[]) {
     filenames.push_back(argv[i]);
   }
 
-  //create message queue
+  // create message queue
   key_t key = ftok("/tmp", 65); // generate unique key
-  if(key==-1){
-    std::cerr<<"Failed to generate key for message queue"<<std::endl;
-    key = 12345;  //this is not good but should work if only this program uses it
+  if (key == -1) {
+    std::cerr << "Failed to generate key for message queue" << std::endl;
+    key = 12345; // this is not good but should work if only this program uses
+                 // it
   }
 
   int msgid = msgget(key, 0666 | IPC_CREAT);
-  if(msgid == -1){
-    std::cerr<<"Failed to create message queue: "<<strerror(errno)<<std::endl;
+  if (msgid == -1) {
+    std::cerr << "Failed to create message queue: " << strerror(errno)
+              << std::endl;
     return 1;
   }
 
-  //signal handling for cleanies
-  s_msgid=msgid;
+  // signal handling for cleanies
+  s_msgid = msgid;
   struct sigaction sa;
   sa.sa_handler = signalHandler;
   sigemptyset(&sa.sa_mask);
@@ -134,16 +131,16 @@ int main(int argc, char *argv[]) {
       //
       // Child process
       //
-      signal(SIGINT, SIG_DFL); //reset signal handling for child
+      signal(SIGINT, SIG_DFL); // reset signal handling for child
       signal(SIGTERM, SIG_DFL);
 
-      Finder finder(opts, f, msgid);  
+      Finder finder(opts, f, msgid);
       finder.search();
 
       exit(EXIT_SUCCESS); // child process exits here
     } else if (pid < 0) {
       std::cerr << "Failed to spawn child" << std::endl;
-      msgctl(msgid, IPC_RMID, nullptr); //clean up message queue
+      msgctl(msgid, IPC_RMID, nullptr); // clean up message queue
       return 1;
     } else if (pid > 0) { // parent process
       children.push_back(pid);
@@ -153,51 +150,55 @@ int main(int argc, char *argv[]) {
   //
   // Parent process
   //
-  
-  //recieve messages from queueue
+
+  // receive messages from queueue
   message_t message;
   int active_children = children.size();
-  bool found=false;
+  bool found = false;
 
-  while(active_children>0){
-    ssize_t bytes_received = msgrcv(msgid, &message, sizeof(message.mtext), 1, 0);
+  while (active_children > 0) {
+    ssize_t bytes_received =
+        msgrcv(msgid, &message, sizeof(message) - sizeof(long), 1, 0);
 
-    if(bytes_received>0){
-      //check for termination message
-      if(strcmp(message.mtext, "END")==0){
+    if (bytes_received > 0) {
+      // check for termination message
+      if (strcmp(message.mPath, "END") == 0) {
         active_children--;
-      }else{
-        std::cout<<message.mtext<<std::endl;
-        found=true;
+      } else {
+        std::cout << message.mPid << ": " << message.mFilename << ": "
+                  << message.mPath << std::endl;
+        found = true;
       }
-  }else if(bytes_received == -1){
-    if(errno==EIDRM || errno==EINTR){
-      break; //message queue deleted or interrupted by signal
-    }else{
-      std::cerr<<"Failed to receive message from queue: "<<strerror(errno)<<std::endl;
-      break;
+    } else if (bytes_received == -1) {
+      if (errno == EIDRM || errno == EINTR) {
+        break; // message queue deleted or interrupted by signal
+      } else {
+        std::cerr << "Failed to receive message from queue: " << strerror(errno)
+                  << std::endl;
+        break;
+      }
     }
   }
-}
 
   // clean up child processes
   for (pid_t pid : children) {
     int status;
-    waitpid(pid, &status, 0); //parent waits for each child to finish
+    waitpid(pid, &status, 0); // parent waits for each child to finish
   }
 
-  //clean up the message after all bebes are done
-  if(msgctl(msgid, IPC_RMID, nullptr) == -1){
-    if(errno != EIDRM){ //ignore if already deleted
-      std::cerr<<"Failed to delete message queue: "<<strerror(errno)<<std::endl;
+  // clean up the message after all bebes are done
+  if (msgctl(msgid, IPC_RMID, nullptr) == -1) {
+    if (errno != EIDRM) { // ignore if already deleted
+      std::cerr << "Failed to delete message queue: " << strerror(errno)
+                << std::endl;
     }
   }
 
-  if(!found){
-    std::cout<<"No files found"<<std::endl;
+  if (!found) {
+    std::cout << "No files found" << std::endl;
   }
 
-  //reset the shameful global
-  s_msgid=-1;
+  // reset the shameful global
+  s_msgid = -1;
   return 0;
 }

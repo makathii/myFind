@@ -17,8 +17,7 @@
 /// @class object with the sole task to find file(s) from a specified root path
 class Finder {
 public:
-  Finder(std::shared_ptr<FinderOptions> opts, std::string &filename,
-         int msgid);
+  Finder(std::shared_ptr<FinderOptions> opts, std::string &filename, int msgid);
   ~Finder() = default;
 
   void search();
@@ -33,7 +32,7 @@ private:
   void recFind();
   void Find();
 
-  //message queueue stuff
+  // message queueue stuff
   int mMsgid;
-  void sendMessage(const std::string &text);
+  void sendMessage(const std::string text);
 };
